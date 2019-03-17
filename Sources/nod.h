@@ -45,15 +45,19 @@ void Nod::setIndice(int n)
 {
     indice = n;
 }
+
 void Nod::setInformatie(int n)
 {
     informatie = n;
 }
-int Nod::getIndice() {
+
+int Nod::getIndice()
+{
     return indice;
 }
-int Nod::getInformatie() {
+
+int Nod::getInformatie()
+{
     return informatie;
 }
-
 #endif

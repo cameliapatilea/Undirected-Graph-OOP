@@ -20,6 +20,7 @@ private:
 
 
 public:
+    //constructor
     GrafNeorientat()
     {
         nr_noduri = 0;
@@ -27,7 +28,33 @@ public:
         lista_noduri = NULL;
         matrice_adiacenta = NULL;
     }
+    //destructor
+   ~GrafNeorientat()
+   {
+        for(int i = 0; i < nr_noduri; i++)
+            delete[] matrice_adiacenta[i];
+        delete[] matrice_adiacenta;
 
+        delete[] lista_noduri;
+   }
+
+    //constructor copiere
+    GrafNeorientat(const GrafNeorientat &Graf)
+    {
+         nr_noduri = Graf.nr_noduri ;
+         nr_muchii = Graf.nr_muchii;
+         lista_noduri = new Nod[Graf.nr_noduri + 1];
+         for(int i = 1; i <= Graf.nr_noduri; i++)
+             lista_noduri[i] = Graf.lista_noduri[i];
+
+         matrice_adiacenta = new int*[Graf.nr_noduri + 1];
+         for(int i = 1; i <= Graf.nr_noduri; i++)
+             matrice_adiacenta[i] = new int[Graf.nr_noduri + 1];
+
+         for(int i = 1; i <= Graf.nr_noduri; i++)
+             for(int j = 1; j <= Graf.nr_noduri; j++)
+                 matrice_adiacenta[i] = Graf.matrice_adiacenta[i];
+    }
     int get_nr_noduri()
     {
         return nr_noduri;
@@ -36,6 +63,9 @@ public:
     Nod *parcurgere_dfs(int);
     Nod *parcurgere_bfs(int);
     int **matrice_drumuri();
+    Nod **componente_conexe();
+    ostream& componente_conexe(ostream&);
+    bool graf_conex();
 
 
     friend istream &operator>>(istream &input, GrafNeorientat &G){
@@ -156,14 +186,19 @@ int** GrafNeorientat::matrice_drumuri()
         for(j = 0; j <= nr_noduri; j++)
             MatriceDrumuri[i][j] = 0;
 
+    //parcurg toate nodurile si calculez toate drumurile, de la fiecare nod la toate celelalte
     for(k = 1; k <= nr_noduri; k++)
     {
+        // daca dam peste un nod nevizitat
         if(viz[k] == 0)
         {
+            //maresc nr de componente conexe
             contor_comp_conexe++;
             s = k;
+            //in vectorul viz voi pune nr componentei conexe
             viz[s] = contor_comp_conexe;
 
+            //initializez primul element al cozii cu nodul pe care ma aflu
             coada[0] = s;
             prim = ultim = 0;
 
@@ -174,11 +209,13 @@ int** GrafNeorientat::matrice_drumuri()
                 s = coada[prim++];
 
                 for(i = 1; i <= nr_noduri ; i++)
-                    //daca nodul i nu a mai fost vizitat
+                    //daca nodul i nu a mai fost vizitat si exista drum de la i la s
                     if(matrice_adiacenta[s][i] == 1 && viz[i] == 0 )
                     {
+                        //marchez in matricea de drumuri
                         MatriceDrumuri[i][s] = MatriceDrumuri[s][i] = 1;
                         viz[i] = contor_comp_conexe;
+                        //inserez in coada nodul i
                         coada[++ultim] = i;
 
                     }
@@ -187,12 +224,139 @@ int** GrafNeorientat::matrice_drumuri()
             for(j = 0; j <= ultim - 1 ; j++)
                 for(p = j + 1; p <= ultim ; p++)
                     MatriceDrumuri[coada[j]][coada[p]] = MatriceDrumuri[coada[p]][coada[j]] = 1;
+        }
+    }
+    return MatriceDrumuri;
+}
+Nod** GrafNeorientat::componente_conexe() {
+    int comp = 0;
+    int i, prim, ultim,  j = 0, s = 1, k;
+
+    int *coada = new int[nr_noduri + 1];
+    int *viz  = new int[nr_noduri + 1];
+    Nod **rezultat = new Nod*[nr_noduri + 1];
+    rezultat[0] = new Nod[nr_noduri + 1];
+
+    for(j = 0; j < nr_noduri + 1; j++)
+        viz[j] = 0;
+
+    for(k = 1; k <= nr_noduri; k++) {
+        // daca dam peste un nod nevizitat
+        if (viz[k] == 0) {
+            //maresc nr de componente conexe
+            comp++;
+            s = k;
+            //in vectorul viz voi pune nr componentei conexe
+            viz[s] = comp;
+            prim = ultim = 1;
+            coada[ultim] = s;
+
+            while (prim <= ultim) {
+                for (i = 1; i <= nr_noduri; i++) {
+                    if (matrice_adiacenta[coada[prim]][i] == 1 && viz[i] == 0)
+                    {
+                        viz[i] = 1;
+                        coada[++ultim] = i;
+                    }
+                }
+                prim++;
+            }
+            rezultat[comp] = new Nod[ultim + 1];
+            //retin pe linia 0 dimensiunea pentru fiecare linie in parte, care contine nodurile fiecarei componente conexe in parte
+            rezultat[0][comp] = Nod(ultim, ultim);
+            for(j = 1; j <= ultim; j++)
+                rezultat[comp][j] = lista_noduri[cauta_nod(coada[j])];
 
         }
 
     }
+    rezultat[0][0] = Nod(comp, comp);
+    return rezultat;
+}
 
+ostream& GrafNeorientat::componente_conexe(ostream& output) {
+    int comp = 0;
+    int i, prim, ultim,  j = 0, s = 1, k;
 
-    return MatriceDrumuri;
+    int *coada = new int[nr_noduri + 1];
+    int *viz  = new int[nr_noduri + 1];
+    Nod **rezultat = new Nod*[nr_noduri + 1];
+    rezultat[0] = new Nod[nr_noduri + 1];
+
+    for(j = 0; j < nr_noduri + 1; j++)
+        viz[j] = 0;
+
+    for(k = 1; k <= nr_noduri; k++) {
+        // daca dam peste un nod nevizitat
+        if (viz[k] == 0) {
+            //maresc nr de componente conexe
+            comp++;
+            s = k;
+            //in vectorul viz voi pune nr componentei conexe
+            viz[s] = comp;
+            prim = ultim = 1;
+            coada[ultim] = s;
+
+            while (prim <= ultim) {
+                for (i = 1; i <= nr_noduri; i++) {
+                    if (matrice_adiacenta[coada[prim]][i] == 1 && viz[i] == 0)
+                    {
+                        viz[i] = 1;
+                        coada[++ultim] = i;
+                    }
+                }
+                prim++;
+            }
+            rezultat[comp] = new Nod[ultim + 1];
+            //retin pe linia 0 dimensiunea pentru fiecare linie in parte, care contine nodurile fiecarei componente conexe in parte
+            rezultat[0][comp] = Nod(ultim, ultim);
+            for(j = 1; j <= ultim; j++)
+                rezultat[comp][j] = lista_noduri[cauta_nod(coada[j])];
+
+        }
+
+    }
+    rezultat[0][0] = Nod(comp, comp);
+    output << "Graful are " << rezultat[0][0].getIndice() << " componente conexe \n";
+    for(i = 1; i <= rezultat[0][0].getIndice(); i++)
+    {
+        output << "Componenta conexa nr " << i << ":"<<'\n';
+        for(int j = 1; j <= rezultat[0][i].getIndice(); j++)
+            output << rezultat[i][j].getInformatie() << " ";
+        output<< '\n';
+    }
+    return output;
+}
+
+bool GrafNeorientat::graf_conex() {
+    int i = 0, nr = 0, j = 0, indice;
+    int s = 1;
+
+    int *stiva = new int[nr_noduri + 1];
+    bool *viz  = new bool[nr_noduri + 1];
+    for(j = 0; j < nr_noduri + 1; j++)
+        viz[j] = false;
+
+    stiva[++i] = s;
+
+    while(i > 0)
+    {
+        s = stiva[i];
+        i--;
+        if(viz[s] == false)
+        {
+            viz[s] = true;
+            indice = cauta_nod(s);
+
+        }
+        for(j = 1; j <= nr_noduri; j++)
+            if(matrice_adiacenta[s][j] == 1 && viz[j] == false)
+                stiva[++i] = j;
+    }
+
+    for(i = 1; i <= nr_noduri; i++)
+        if(viz[i] == false)
+            return false;
+     return true;
 }
 #endif
