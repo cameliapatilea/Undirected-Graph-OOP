@@ -35,6 +35,7 @@ public:
 
     Nod *parcurgere_dfs(int);
     Nod *parcurgere_bfs(int);
+    int **matrice_drumuri();
 
 
     friend istream &operator>>(istream &input, GrafNeorientat &G){
@@ -78,12 +79,41 @@ int GrafNeorientat::cauta_nod(int indice) {
             return i;
     return -1;
 }
-/*Nod* GrafNeorientat::parcurgere_bfs(int s)
+Nod* GrafNeorientat::parcurgere_bfs(int s)
 {
+    int i, prim, ultim, nr = 0, j = 0, indice;
 
+    Nod *rezultat = new Nod[nr_noduri + 1];
+    int *coada = new int[nr_noduri + 1];
+    bool *viz  = new bool[nr_noduri + 1];
+    for(j = 0; j < nr_noduri + 1; j++)
+        viz[j] = false;
 
+    viz[s] = true;
+    indice = cauta_nod(s);
+    rezultat[++nr] = lista_noduri[indice];
+    //initializez coada cu nodul de start
+    coada[0] = s;
+    prim = ultim = 0;
+    //cat timp coada nu e vida
+    while(prim <= ultim)
+    {
+        //extragem un element din coada
+        s = coada[prim++];
 
-}*/
+        for(i = 1; i <= nr_noduri ; i++)
+            //daca nodul i nu a mai fost vizitat
+            if(viz[i] == false && matrice_adiacenta[s][i] == 1)
+            {
+                viz[i] = true;
+                indice = cauta_nod(i);
+                rezultat[++nr] = lista_noduri[indice];
+                coada[++ultim] = i;
+            }
+    }
+    return rezultat;
+
+}
 Nod* GrafNeorientat::parcurgere_dfs(int s)
 {
     int i = 0, nr = 0, j = 0, indice;
@@ -110,5 +140,59 @@ Nod* GrafNeorientat::parcurgere_dfs(int s)
                 stiva[++i] = j;
     }
     return rezultat;
+}
+int** GrafNeorientat::matrice_drumuri()
+{
+    int i, prim, ultim,  j = 0, s = 1, k, contor_comp_conexe = 0, p = 0;
+
+    int *coada = new int[nr_noduri + 1];
+    int *viz  = new int[nr_noduri + 1];
+    for(j = 0; j < nr_noduri + 1; j++)
+        viz[j] = 0;
+    int** MatriceDrumuri = new int*[nr_noduri + 1];
+    for(i = 0 ; i <=nr_noduri; i++)
+        MatriceDrumuri[i] = new int[nr_noduri + 1];
+    for(i = 0; i <= nr_noduri; i++)
+        for(j = 0; j <= nr_noduri; j++)
+            MatriceDrumuri[i][j] = 0;
+
+    for(k = 1; k <= nr_noduri; k++)
+    {
+        if(viz[k] == 0)
+        {
+            contor_comp_conexe++;
+            s = k;
+            viz[s] = contor_comp_conexe;
+
+            coada[0] = s;
+            prim = ultim = 0;
+
+            //cat timp coada nu e vida
+            while(prim <= ultim)
+            {
+                //extragem un element din coada
+                s = coada[prim++];
+
+                for(i = 1; i <= nr_noduri ; i++)
+                    //daca nodul i nu a mai fost vizitat
+                    if(matrice_adiacenta[s][i] == 1 && viz[i] == 0 )
+                    {
+                        MatriceDrumuri[i][s] = MatriceDrumuri[s][i] = 1;
+                        viz[i] = contor_comp_conexe;
+                        coada[++ultim] = i;
+
+                    }
+
+            }
+            for(j = 0; j <= ultim - 1 ; j++)
+                for(p = j + 1; p <= ultim ; p++)
+                    MatriceDrumuri[coada[j]][coada[p]] = MatriceDrumuri[coada[p]][coada[j]] = 1;
+
+        }
+
+    }
+
+
+    return MatriceDrumuri;
 }
 #endif
