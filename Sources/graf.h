@@ -11,11 +11,13 @@
 class GrafNeorientat{
 private:
 
-    int nr_noduri;
+
     int nr_muchii;
     Nod *lista_noduri;
     int **matrice_adiacenta;
     int cauta_nod(int);
+    int nr_noduri;
+    int nr_noduri2;
 
 
 
@@ -27,15 +29,23 @@ public:
         nr_muchii = 0;
         lista_noduri = NULL;
         matrice_adiacenta = NULL;
+
+    }
+    GrafNeorientat(int nr_noduri)
+    {
+        nr_noduri2 = nr_noduri;
+        nr_muchii = 0;
+        lista_noduri = NULL;
+        matrice_adiacenta = NULL;
     }
     //destructor
    ~GrafNeorientat()
    {
-        for(int i = 0; i < nr_noduri; i++)
-            delete[] matrice_adiacenta[i];
-        delete[] matrice_adiacenta;
-
         delete[] lista_noduri;
+
+       for(int i = 1; i <= nr_noduri2; i++)
+           delete[] matrice_adiacenta[i];
+       delete[] matrice_adiacenta;
    }
 
     //constructor copiere
@@ -55,6 +65,7 @@ public:
              for(int j = 1; j <= Graf.nr_noduri; j++)
                  matrice_adiacenta[i] = Graf.matrice_adiacenta[i];
     }
+
     int get_nr_noduri()
     {
         return nr_noduri;
@@ -101,8 +112,53 @@ public:
         return output;
 
     }
-};
+  GrafNeorientat operator=(GrafNeorientat graf);
+  friend  GrafNeorientat operator+(const GrafNeorientat& G1, const GrafNeorientat& G2)
+    {
+       GrafNeorientat G3 ;
+        G3.nr_noduri = G1.nr_noduri;
+        G3.nr_muchii = 0;
 
+        G3.lista_noduri = new Nod[G1.nr_noduri + 1];
+        for(int i = 1; i <= G1.nr_noduri; i++)
+        G3.lista_noduri[i] = G1.lista_noduri[i];
+
+        G3.matrice_adiacenta = new int*[G1.nr_noduri ];
+        for(int i = 1; i <= G1.nr_noduri ; i++)
+            G3.matrice_adiacenta[i] = new int[G1.nr_noduri ];
+        for(int i = 1; i <= G3.nr_noduri; i++)
+            for(int j = 1; j <= G3.nr_noduri; j++)
+                G3.matrice_adiacenta[i][j] = 0;
+
+        for(int i = 1; i <= G3.nr_noduri; i++)
+            for(int j = i+1; j <= G3.nr_noduri; j++)
+                if((G1.matrice_adiacenta[i][j] == 1  || G2.matrice_adiacenta[i][j] == 1) )
+                {
+                    G3.matrice_adiacenta[i][j] = G3.matrice_adiacenta[j][i] = 1;
+                    G3.nr_muchii++;
+                }
+
+         return G3;
+
+    }
+};
+GrafNeorientat GrafNeorientat::operator=(GrafNeorientat graf)
+{
+    nr_noduri = graf.nr_noduri;
+    nr_muchii = graf.nr_muchii;
+    lista_noduri = new Nod[graf.nr_noduri + 1];
+    for(int i = 1; i <= graf.nr_noduri; i++)
+        lista_noduri[i] = graf.lista_noduri[i];
+
+    matrice_adiacenta = new int*[graf.nr_noduri + 1];
+    for(int i = 1; i <= graf.nr_noduri; i++)
+        matrice_adiacenta[i] = new int[graf.nr_noduri + 1];
+
+    for(int i = 1; i <= graf.nr_noduri; i++)
+        for(int j = 1; j <= graf.nr_noduri; j++)
+            matrice_adiacenta[i] = graf.matrice_adiacenta[i];
+     return *this;
+}
 int GrafNeorientat::cauta_nod(int indice) {
     for (int i = 1; i <= nr_noduri; i++)
         if (lista_noduri[i].getIndice() == indice)
