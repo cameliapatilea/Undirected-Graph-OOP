@@ -31,21 +31,23 @@ public:
         matrice_adiacenta = NULL;
 
     }
-    GrafNeorientat(int nr_noduri)
+  /*  GrafNeorientat(int nr_noduri)
     {
         nr_noduri2 = nr_noduri;
         nr_muchii = 0;
         lista_noduri = NULL;
         matrice_adiacenta = NULL;
-    }
+    }*/
     //destructor
    ~GrafNeorientat()
    {
-        delete[] lista_noduri;
 
-       for(int i = 1; i <= nr_noduri2; i++)
+       for(int i = 1; i <= nr_noduri; i++)
            delete[] matrice_adiacenta[i];
        delete[] matrice_adiacenta;
+
+       delete[] lista_noduri;
+
    }
 
     //constructor copiere
@@ -63,7 +65,7 @@ public:
 
          for(int i = 1; i <= Graf.nr_noduri; i++)
              for(int j = 1; j <= Graf.nr_noduri; j++)
-                 matrice_adiacenta[i] = Graf.matrice_adiacenta[i];
+                 matrice_adiacenta[i][j] = Graf.matrice_adiacenta[i][j];
     }
 
     int get_nr_noduri()
@@ -80,21 +82,29 @@ public:
 
 
     friend istream &operator>>(istream &input, GrafNeorientat &G){
-        input >>  G.nr_noduri;
-        G.lista_noduri = new Nod[G.nr_noduri + 1];
-        for(int i = 1; i <= G.nr_noduri; i++)
-            input >> G.lista_noduri[i];
+        try {
+            input >> G.nr_noduri;
+            if (G.nr_noduri < 1)
+                throw G.nr_noduri;
 
-        input >> G.nr_muchii;
-        G.matrice_adiacenta = new int*[G.nr_noduri + 1];
-        for(int i = 0; i <= G.nr_noduri; i++)
-            G.matrice_adiacenta[i] = new int[G.nr_noduri + 1];
+            G.lista_noduri = new Nod[G.nr_noduri + 1];
+            for (int i = 1; i <= G.nr_noduri; i++)
+                input >> G.lista_noduri[i];
 
-        int x, y;
-        for(int i = 0; i < G.nr_muchii; i++)
+            input >> G.nr_muchii;
+            G.matrice_adiacenta = new int *[G.nr_noduri + 1];
+            for (int i = 1; i <= G.nr_noduri; i++)
+                G.matrice_adiacenta[i] = new int[G.nr_noduri + 1];
+
+            int x, y;
+            for (int i = 0; i < G.nr_muchii; i++) {
+                input >> x >> y;
+                G.matrice_adiacenta[x][y] = G.matrice_adiacenta[y][x] = 1;
+            }
+        }
+        catch(int x)
         {
-            input >> x >> y;
-            G.matrice_adiacenta[x][y] = G.matrice_adiacenta[y][x] = 1;
+            cout << "Numarul de noduri nu poate fi mai mic decat 1 \n";
         }
         return input;
     }
@@ -109,6 +119,7 @@ public:
                 if (G.matrice_adiacenta[i][j] == 1)
                     output << i << " "<< j << endl;
         }
+
         return output;
 
     }
@@ -141,6 +152,35 @@ public:
          return G3;
 
     }
+    //sortez crescator dupa nr noduri si mai apoi dupa nr de muchii
+    bool operator<(const GrafNeorientat& Graf)
+    {
+      if(nr_noduri < Graf.nr_noduri)
+          return true;
+      if(nr_noduri == Graf.nr_noduri && nr_muchii < Graf.nr_muchii)
+          return true;
+      return false;
+    }
+    bool operator>(const GrafNeorientat& Graf)
+    {
+        if(nr_noduri > Graf.nr_noduri)
+            return true;
+        if(nr_noduri == Graf.nr_noduri && nr_muchii > Graf.nr_muchii)
+            return true;
+        return false;
+    }
+    friend bool operator==(const GrafNeorientat &G1, const GrafNeorientat &G2)
+    {
+        if(G1.nr_noduri == G2.nr_noduri && G1.nr_muchii == G2.nr_muchii)
+            return true;
+        return false;
+    }
+    friend bool operator!=(const GrafNeorientat &G1, const GrafNeorientat &G2)
+    {
+        if((G1.nr_noduri == G2.nr_noduri && G1.nr_muchii != G2.nr_muchii) || ( (G1.nr_noduri != G2.nr_noduri && G1.nr_muchii == G2.nr_muchii)))
+            return true;
+        return false;
+    }
 };
 GrafNeorientat GrafNeorientat::operator=(GrafNeorientat graf)
 {
@@ -156,7 +196,7 @@ GrafNeorientat GrafNeorientat::operator=(GrafNeorientat graf)
 
     for(int i = 1; i <= graf.nr_noduri; i++)
         for(int j = 1; j <= graf.nr_noduri; j++)
-            matrice_adiacenta[i] = graf.matrice_adiacenta[i];
+            matrice_adiacenta[i][j] = graf.matrice_adiacenta[i][j];
      return *this;
 }
 int GrafNeorientat::cauta_nod(int indice) {
